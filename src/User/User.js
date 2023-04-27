@@ -1,15 +1,31 @@
 class User {
-	constructor({ email, lastName, firstName, birthDate, password }) {
+	constructor({ email, lastname, firstname, birthdate, password }) {
 		this.email = email;
-		this.lastName = lastName;
-		this.firstName = firstName;
-		this.birthDate = birthDate;
+		this.lastname = lastname;
+		this.firstname = firstname;
+		this.birthdate = birthdate;
 		this.password = password;
 		this.todo = null;
 	}
 
 	setTodo = (todoId) => {
 		this.setTodo = todoId;
+	};
+
+	getEmail = () => {
+		return this.email;
+	};
+	getFirstname = () => {
+		return this.firstname;
+	};
+	getLastname = () => {
+		return this.lastname;
+	};
+	getBirthdate = () => {
+		return this.birthdate;
+	};
+	getPassword = () => {
+		return this.password;
 	};
 }
 

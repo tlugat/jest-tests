@@ -3,13 +3,16 @@ const TodoItem = require("../TodoItem/TodoItem");
 const User = require("./User");
 
 const todo = new Todo({ name: "Todo 1" });
-const todoItem = new TodoItem({
-	name: "Todo 1",
-	createdAt: "Tue Apr 25 2023 17:11:09 GMT+0200",
-});
-todo.setItem(todoItem);
 
-test("User is valid", () => {
+for (let i = 1; i <= 9; i++) {
+	const todoItem = new TodoItem({
+		name: "TodoItem " + i,
+		createdAt: `Tue Apr ${i} 2023 17:11:09 GMT+0200`,
+	});
+	todo.addItem(todoItem);
+}
+
+describe("User can create todo", () => {
 	const user = new User({
 		email: "robin.sobasto@gmail.com",
 		lastName: "Sobasto",
@@ -18,130 +21,83 @@ test("User is valid", () => {
 		password: "Abcd1234",
 	});
 
-	const isValid = (user) => {
-		return (
-			emailIsValid(user.email) &&
-			lastNameIsValid(user.lastName) &&
-			firstNameIsValid(user.firstName) &&
-			birthDateIsValid(user.birthDate) &&
-			passwordIsValid(user.password)
-		);
-	};
-
-	emailIsValid = (email) => {
-		if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/))
-			throw new Error("Email is not valid");
-		return true;
-	};
-
-	lastNameIsValid = (lastName) => {
-		if (!lastName) throw new Error("Last name is not valid");
-		return true;
-	};
-
-	firstNameIsValid = (firstName) => {
-		if (!firstName) throw new Error("First name is not valid");
-		return true;
-	};
-
-	birthDateIsValid = (birthDate) => {
-		if (!birthDate.match(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/))
-			throw new Error("Birth date is not valid");
-
-		const actualDate = new Date(birthDate);
-		let treizeAnsAvant = new Date();
-		treizeAnsAvant.setFullYear(treizeAnsAvant.getFullYear() - 13);
-
-		if (actualDate > treizeAnsAvant) throw new Error("Age is not valid");
-
-		return true;
-	};
-
-	passwordIsValid = (password) => {
-		const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,40}$/;
-		if (!passwordRegex.test(password)) throw new Error("Password is not valid");
-
-		return true;
-	};
-
-	const isUserValid = isValid(user);
-	expect(isUserValid).toBeTruthy();
+	test("User should not have a todo", () => {
+		expect(user.todo).toBeFalsy();
+	});
 });
 
-test("User can create todo", () => {
-	const user = new User({
-		email: "robin.sobasto@gmail.com",
-		lastName: "Sobasto",
-		firstName: "Robin",
-		birthDate: "1997-02-09",
-		password: "Abcd1234",
+describe("User can add item to todo", () => {
+	const todoIsEmpty = todo.getItems().length === 0;
+	const todoItem = new TodoItem({
+		name: "Todo 2",
+		content: "Non cillum aliqua dolore sit nisi commodo.",
 	});
 
-	hasTodo = () => {
-		if (user.todo) throw new Error("User has already a todo");
-		return true;
-	};
+	describe("User is valid", () => {
+		const user = new User({
+			email: "robin.sobasto@gmail.com",
+			lastname: "Sobasto",
+			firstname: "Robin",
+			birthdate: "1997-02-09",
+			password: "Abcd1234",
+		});
 
-	const userCanCreateTodo = hasTodo();
+		test("Lastname should be defined", () => {
+			expect(user.getLastname()).toBeTruthy();
+		});
 
-	expect(userCanCreateTodo).toBeTruthy();
-});
+		test("Firstname should be defined", () => {
+			expect(user.getFirstname()).toBeTruthy();
+		});
 
-test("User can add item to todo", () => {
-	// const user = new User({
-	// 	email: "robin.sobasto@gmail.com",
-	// 	lastName: "Sobasto",
-	// 	firstName: "Robin",
-	// 	birthDate: "1997-02-09",
-	// 	password: "Abcd1234",
-	// });
+		test("Email should be valid", () => {
+			expect(user.getEmail()).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+		});
 
-	const todoItem = new TodoItem({ name: "Todo 2" });
+		test("Password should be valid", () => {
+			expect(user.getPassword()).toMatch(
+				/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,40}$/
+			);
+		});
 
-	isTodoNotFull = () => {
-		if (todo.getItems().length === 10)
-			throw new Error("Todo has too many items (10 max)");
-		return true;
-	};
+		test("Birthdate should be valid", () => {
+			expect(user.getBirthdate()).toMatch(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
+		});
 
-	isItemContentValid = (content) => {
-		if (content && content.length > 1000)
-			throw new Error("Content is too long (1000 characters max.)");
-		return true;
-	};
+		test("User should be at least 13 years old", () => {
+			const birthDate = new Date(user.getBirthdate());
+			const now = new Date();
+			const ageInYears = now.getFullYear() - birthDate.getFullYear();
+			if (
+				now.getMonth() < birthDate.getMonth() ||
+				(now.getMonth() === birthDate.getMonth() &&
+					now.getDate() < birthDate.getDate())
+			) {
+				ageInYears--;
+			}
+			expect(ageInYears).toBeGreaterThanOrEqual(13);
+		});
+	});
 
-	isItemCreatedAtValid = () => {
-		const date = new Date();
-		const todoItems = todo.getItems();
-		const lastItemAddedDate = todoItems[todoItems.length - 1].getCreatedAt();
-		const diff = (date - lastItemAddedDate) / (1000 * 60);
-
-		if (diff < 30)
-			throw new Error(`Last item is to recent. Wait ${30 - diff} minutes`);
-	};
-
-	isItemNameUnique = () => {
+	test("Todo should not be full", () => {
+		expect(todo.getItems().length).toBeLessThan(10);
+	});
+	test("Content should not be greater than 1000 characters", () => {
+		expect(todoItem.getContent().length).toBeLessThanOrEqual(1000);
+	});
+	!todoIsEmpty &&
+		test("Should have wait at least 30min to add new item", () => {
+			const date = new Date();
+			const todoItems = todo.getItems();
+			const lastItemAddedDate = new Date(
+				todoItems[todoItems.length - 1].getCreatedAt()
+			);
+			const diff = (date - lastItemAddedDate) / (1000 * 60);
+			expect(diff).toBeGreaterThanOrEqual(30);
+		});
+	test("Name should be unique", () => {
 		const items = todo.getItems();
 		const isNameUnique = items.every((item) => item.name !== todoItem.name);
-		if (!isNameUnique) throw new Error("Name is not unique");
-
-		return true;
-	};
-
-	isItemValid = () => {
-		const todoIsEmpty = todo.getItems().length === 0;
-		const isItemDateValid = !todoIsEmpty && isItemCreatedAtValid();
-		const isItemNameValid = !todoIsEmpty && isItemNameUnique();
-
-		return (
-			isTodoNotFull() &&
-			isItemContentValid() &&
-			isItemDateValid &&
-			isItemNameValid
-		);
-	};
-
-	const userCanAddTodoItem = isItemValid();
-
-	expect(userCanAddTodoItem).toBeTruthy();
+		expect(isNameUnique).toBeTruthy();
+	});
 });

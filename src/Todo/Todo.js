@@ -8,7 +8,7 @@ class Todo {
 		this.createdAt = new Date();
 	}
 
-	setItem = (item) => {
+	addItem = (item) => {
 		this.items = [...this.items, item];
 	};
 
