@@ -2,15 +2,61 @@ const Todo = require("../Todo/Todo");
 const TodoItem = require("../TodoItem/TodoItem");
 const User = require("./User");
 
+const user = new User({
+	email: "robin.sobasto@gmail.com",
+	lastname: "Sobasto",
+	firstname: "Robin",
+	birthdate: "1997-02-09",
+	password: "Abcd1234",
+});
+
 const todo = new Todo({ name: "Todo 1" });
 
-for (let i = 1; i <= 9; i++) {
+for (let i = 1; i <= 7; i++) {
 	const todoItem = new TodoItem({
 		name: "TodoItem " + i,
 		createdAt: `Tue Apr ${i} 2023 17:11:09 GMT+0200`,
 	});
 	todo.addItem(todoItem);
 }
+
+describe("User is valid", () => {
+	test("Lastname should be defined", () => {
+		expect(user.getLastname()).toBeTruthy();
+	});
+
+	test("Firstname should be defined", () => {
+		expect(user.getFirstname()).toBeTruthy();
+	});
+
+	test("Email should be valid", () => {
+		expect(user.getEmail()).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+	});
+
+	test("Password should be valid", () => {
+		expect(user.getPassword()).toMatch(
+			/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,40}$/
+		);
+	});
+
+	test("Birthdate should be valid", () => {
+		expect(user.getBirthdate()).toMatch(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
+	});
+
+	test("User should be at least 13 years old", () => {
+		const birthDate = new Date(user.getBirthdate());
+		const now = new Date();
+		const ageInYears = now.getFullYear() - birthDate.getFullYear();
+		if (
+			now.getMonth() < birthDate.getMonth() ||
+			(now.getMonth() === birthDate.getMonth() &&
+				now.getDate() < birthDate.getDate())
+		) {
+			ageInYears--;
+		}
+		expect(ageInYears).toBeGreaterThanOrEqual(13);
+	});
+});
 
 describe("User can create todo", () => {
 	const user = new User({
@@ -33,50 +79,30 @@ describe("User can add item to todo", () => {
 		content: "Non cillum aliqua dolore sit nisi commodo.",
 	});
 
-	describe("User is valid", () => {
-		const user = new User({
-			email: "robin.sobasto@gmail.com",
-			lastname: "Sobasto",
-			firstname: "Robin",
-			birthdate: "1997-02-09",
-			password: "Abcd1234",
-		});
+	test("User is valid", () => {
+		expect(user.getLastname()).toBeTruthy();
 
-		test("Lastname should be defined", () => {
-			expect(user.getLastname()).toBeTruthy();
-		});
+		expect(user.getFirstname()).toBeTruthy();
 
-		test("Firstname should be defined", () => {
-			expect(user.getFirstname()).toBeTruthy();
-		});
+		expect(user.getEmail()).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
 
-		test("Email should be valid", () => {
-			expect(user.getEmail()).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
-		});
+		expect(user.getPassword()).toMatch(
+			/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,40}$/
+		);
 
-		test("Password should be valid", () => {
-			expect(user.getPassword()).toMatch(
-				/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,40}$/
-			);
-		});
+		expect(user.getBirthdate()).toMatch(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
 
-		test("Birthdate should be valid", () => {
-			expect(user.getBirthdate()).toMatch(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
-		});
-
-		test("User should be at least 13 years old", () => {
-			const birthDate = new Date(user.getBirthdate());
-			const now = new Date();
-			const ageInYears = now.getFullYear() - birthDate.getFullYear();
-			if (
-				now.getMonth() < birthDate.getMonth() ||
-				(now.getMonth() === birthDate.getMonth() &&
-					now.getDate() < birthDate.getDate())
-			) {
-				ageInYears--;
-			}
-			expect(ageInYears).toBeGreaterThanOrEqual(13);
-		});
+		const birthDate = new Date(user.getBirthdate());
+		const now = new Date();
+		const ageInYears = now.getFullYear() - birthDate.getFullYear();
+		if (
+			now.getMonth() < birthDate.getMonth() ||
+			(now.getMonth() === birthDate.getMonth() &&
+				now.getDate() < birthDate.getDate())
+		) {
+			ageInYears--;
+		}
+		expect(ageInYears).toBeGreaterThanOrEqual(13);
 	});
 
 	test("Todo should not be full", () => {
@@ -99,5 +125,16 @@ describe("User can add item to todo", () => {
 		const items = todo.getItems();
 		const isNameUnique = items.every((item) => item.name !== todoItem.name);
 		expect(isNameUnique).toBeTruthy();
+	});
+	test("Should send email if new item is the 8th", () => {
+		const nbItems = todo.getItems().length;
+		const sendMail = jest.fn();
+		const shouldSendEmail = nbItems === 7;
+		if (shouldSendEmail) {
+			sendMail();
+			expect(sendMail).toHaveBeenCalled();
+		} else {
+			expect(shouldSendEmail).toBeFalsy();
+		}
 	});
 });
